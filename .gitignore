@@ -1,0 +1,18 @@
+# Generated ESM build output
+*/config/dist/
+
+# Generated card pool mirror
+*/config/cards.data.mjs
+
+# Dependencies (if per-game)
+node_modules/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Temp files
+*.tmp
+*~
