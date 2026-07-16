@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    .deck-screen { padding: 72px 12px 76px !important; }
+    .gallery-screen { padding: 72px 12px 76px !important; }
+    .settings-screen { padding: 72px 12px 76px !important; }
+    .profile-screen { padding: 72px 12px 76px !important; }
+    .match-screen { padding: 72px 12px 76px !important; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    let appRoot = '';
+    let isElectron = false;
+    if (typeof window !== 'undefined' && window.electronAPI && window.electronAPI.getAppRoot) {
+      appRoot = await window.electronAPI.getAppRoot();
+      isElectron = true;
+    } else {
+      const currentUrl = new URL(import.meta.url);
+      const pathname = currentUrl.pathname;
+      const rootIndex = pathname.indexOf('/card-games/crimsonfront/web/');
+      appRoot = pathname.substring(0, rootIndex);
+    }
+
+    function root(path) {
+      if (!path.startsWith('/')) path = '/' + path;
+      return appRoot + path;
+    }
+
+    function importRoot(path) {
+      if (!path.startsWith('/')) path = '/' + path;
+      if (isElectron) {
+        return 'file://' + appRoot + path;
+      }
+      return appRoot + path;
+    }
+
+    const styles = [
+      importRoot('/framework/ui/shell/shell.css'),
+      importRoot('/framework/ui/shell/fx/fx.css'),
+      importRoot('/card-games/crimsonfront/config/battleFx.css'),
+    ];
+    for (const href of styles) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      document.head.appendChild(link);
+    }
+
+    const [
+      { default: theme },
+      { default: cards },
+      { default: presets },
+      { bootShell },
+      { default: meta },
+      { default: rules },
+      { registerAllEffects },
+      cardsModule,
+      { default: createBattleFx },
+    ] = await Promise.all([
+      import(importRoot('/card-games/crimsonfront/config/theme.mjs')),
+      import(importRoot('/card-games/crimsonfront/config/cards.data.mjs')),
+      import(importRoot('/card-games/crimsonfront/config/presetDecks.mjs')),
+      import(importRoot('/framework/ui/shell/boot.js')),
+      import(importRoot('/card-games/crimsonfront/config/dist/meta.mjs')),
+      import(importRoot('/card-games/crimsonfront/config/dist/rules.mjs')),
+      import(importRoot('/card-games/crimsonfront/config/dist/effects.mjs')),
+      import(importRoot('/card-games/crimsonfront/config/dist/cards.mjs')),
+      import(importRoot('/card-games/crimsonfront/config/battleFx.mjs')),
+    ]);
+
+    function fixPath(p) {
+      if (!p) return p;
+      if (p.startsWith('/')) return root(p);
+      return p;
+    }
+
+    if (theme.home && theme.home.background) {
+      theme.home.background = fixPath(theme.home.background);
+    }
+    if (theme.gallery && theme.gallery.artBasePath) {
+      theme.gallery.artBasePath = fixPath(theme.gallery.artBasePath);
+    }
+    if (theme.battle && theme.battle.card && theme.battle.card.artBasePath) {
+      theme.battle.card.artBasePath = fixPath(theme.battle.card.artBasePath);
+    }
+
+    const runtime = {
+      meta, rules, registerEffects: registerAllEffects,
+      cards: cardsModule, createBattleFx,
+    };
+    console.log('[renderer] Calling bootShell with theme:', theme.meta.title);
+    bootShell(theme, cards, presets, runtime);
+    console.log('[renderer] bootShell completed, app mounted');
+  </script>
+</body>
+</html>

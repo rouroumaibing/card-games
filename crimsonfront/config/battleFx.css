@@ -1,0 +1,189 @@
+/* card-games/crimsonfront/config/battleFx.css — CrimsonFront 战斗 presenter 专属分镜样式（游戏专属，允许 hex）。
+   迁自 crimsonfront/modules/battle/spellfx.css 中「非通用」的前摇/结算分镜元素。
+   通用图元（伤害数字/爆炸/闪电/治疗/震屏 + 视频叠加层 .spellfx-*）由框架 fx.css 提供，勿在此重复。
+   所有元素由 battleFx.mjs 挂进全屏 particle-layer（position:relative/absolute inset:0），故这里一律 position:absolute。 */
+
+/* 全屏覆盖分镜层（贝塞尔光缆 SVG / 核弹遮罩 / hit-stop 闪白） */
+.cf-spellfx {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.cf-spellfx-pointer { z-index: 40; overflow: visible; }
+
+/* 阵营光缆（SVG path，stroke 由 JS 逐元素设阵营色） */
+.cf-cable {
+  fill: none;
+  stroke-width: 4;
+  filter: drop-shadow(0 0 6px currentColor);
+  animation: cf-cable-pulse 0.6s ease-in-out infinite alternate;
+}
+@keyframes cf-cable-pulse {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* 锁定水晶：菱形 / 螺旋 / 护盾（color 由 JS 设阵营色，currentColor 取用） */
+.cf-lock-crystal {
+  position: absolute;
+  z-index: 41;
+  width: 34px; height: 34px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  border: 3px solid currentColor;
+  box-shadow: 0 0 12px currentColor, inset 0 0 8px currentColor;
+  animation: cf-lock-appear 0.35s ease-out;
+  pointer-events: none;
+}
+.cf-lock-crystal.cf-lock-spiral {
+  border-radius: 50%;
+  transform: translate(-50%, -50%) rotate(0deg);
+  border-style: dashed;
+  animation: cf-lock-spin 0.6s linear infinite;
+}
+.cf-lock-crystal.cf-lock-shield {
+  border-radius: 40% 40% 50% 50%;
+  transform: translate(-50%, -50%) rotate(0deg);
+}
+@keyframes cf-lock-appear {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(45deg) scale(0.4); }
+  100% { opacity: 1; transform: translate(-50%, -50%) rotate(45deg) scale(1); }
+}
+@keyframes cf-lock-spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* 非指向预警椭圆遮罩 */
+.cf-warning-ellipse {
+  position: absolute;
+  z-index: 39;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,60,60,0.35), rgba(255,60,60,0.12) 60%, transparent 75%);
+  border: 2px dashed rgba(255,80,80,0.7);
+  transform: translate(-50%, -50%);
+  animation: cf-warn-pulse 0.5s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+.cf-warning-ellipse.cf-warn-ally {
+  background: radial-gradient(circle, rgba(80,160,255,0.30), rgba(80,160,255,0.10) 60%, transparent 75%);
+  border-color: rgba(100,180,255,0.7);
+}
+@keyframes cf-warn-pulse {
+  0% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.94); }
+  100% { opacity: 0.95; transform: translate(-50%, -50%) scale(1.04); }
+}
+
+/* 核弹去色遮罩 + 倒计时数字 */
+.cf-nuke-veil {
+  z-index: 42;
+  background: rgba(20,10,10,0.35);
+  backdrop-filter: grayscale(0.85) contrast(1.1);
+  -webkit-backdrop-filter: grayscale(0.85) contrast(1.1);
+}
+.cf-nuke-count {
+  position: absolute;
+  top: 40%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 120px;
+  font-weight: 900;
+  color: #ff3b3b;
+  text-shadow: 0 0 24px #ff0000;
+  animation: cf-nuke-count-pop 0.6s ease-out;
+}
+@keyframes cf-nuke-count-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); }
+  30% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0.2; transform: translate(-50%, -50%) scale(0.7); }
+}
+
+/* hit-stop 闪白 */
+.cf-hitstop-flash {
+  z-index: 43;
+  background: rgba(255,255,255,0.55);
+  animation: cf-hitstop-fade 0.15s ease-out forwards;
+}
+@keyframes cf-hitstop-fade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 倒计时环（定时炸弹前摇） */
+.cf-bomb-count-ring {
+  position: absolute;
+  z-index: 41;
+  width: 56px; height: 56px;
+  border: 4px solid #ff6600;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 14px #ff6600;
+  animation: cf-bomb-ring 0.5s ease-out;
+  pointer-events: none;
+}
+@keyframes cf-bomb-ring {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* 召唤光柱 / 增益轮廓（结算复用） */
+.cf-summon-pillar {
+  position: absolute;
+  z-index: 12;
+  width: 40px;
+  background: linear-gradient(to top, rgba(120,190,255,0.9), transparent);
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: cf-summon-drop 0.5s ease-out forwards;
+}
+@keyframes cf-summon-drop {
+  0% { opacity: 0; transform: translateX(-50%) scaleY(0); transform-origin: bottom; }
+  60% { opacity: 1; transform: translateX(-50%) scaleY(1); transform-origin: bottom; }
+  100% { opacity: 0; transform: translateX(-50%) scaleY(1.1); transform-origin: bottom; }
+}
+.cf-buff-outline {
+  position: absolute;
+  z-index: 12;
+  border: 3px solid #b06bff;
+  border-radius: 8px;
+  box-shadow: 0 0 12px #b06bff;
+  pointer-events: none;
+  animation: cf-buff-flash 0.6s ease-out forwards;
+}
+.cf-buff-outline.cf-shield-outline { border-color: #ff5555; box-shadow: 0 0 12px #ff5555; }
+@keyframes cf-buff-flash {
+  0% { opacity: 0; transform: scale(1.3); }
+  40% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* 抽牌飞入牌背 */
+.cf-draw-flyer {
+  position: absolute;
+  z-index: 13;
+  width: 56px; height: 78px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #2a3a5e, #16213e);
+  border: 1px solid rgba(240,192,64,0.6);
+  box-shadow: 0 0 8px rgba(0,0,0,0.5);
+  opacity: 0.9;
+  pointer-events: none;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 运动敏感降级：静态化持续动画（前摇仍在，但不闪烁/旋转） */
+@media (prefers-reduced-motion: reduce) {
+  .cf-cable,
+  .cf-lock-crystal,
+  .cf-lock-crystal.cf-lock-spiral,
+  .cf-warning-ellipse,
+  .cf-nuke-count,
+  .cf-bomb-count-ring,
+  .cf-summon-pillar,
+  .cf-buff-outline {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .cf-draw-flyer { transition-duration: 0.01ms !important; }
+  .cf-hitstop-flash { animation: none !important; opacity: 0; }
+}
